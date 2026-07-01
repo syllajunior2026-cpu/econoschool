@@ -2673,20 +2673,18 @@ function isLocalServer() {
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 }
 
-// Requête via proxy local (résout le problème CORS)
+// Requête via proxy (résout le problème CORS)
+// En local : passe par server.js (route /api/sms-proxy)
+// En production (Vercel) : passe par la Serverless Function /api/sms-proxy
+// Dans les deux cas, on utilise le MÊME endpoint pour éviter les appels directs
+// au navigateur vers api.orange.com, qui sont bloqués par CORS.
 async function proxyFetch(targetUrl, method, headers, body) {
-  if (isLocalServer()) {
-    // Passer par le proxy Node.js local
-    const res = await fetch('/sms-proxy', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: targetUrl, method, headers, body })
-    });
-    return res;
-  } else {
-    // Accès direct (si hébergé sur un vrai serveur)
-    return fetch(targetUrl, { method, headers, body });
-  }
+  const res = await fetch('/api/sms-proxy', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url: targetUrl, method, headers, body })
+  });
+  return res;
 }
 
 async function getOrangeToken() {

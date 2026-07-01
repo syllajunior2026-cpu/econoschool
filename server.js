@@ -28,7 +28,7 @@ const server = http.createServer((req, res) => {
   const parsed = url.parse(req.url, true);
 
   // ===== PROXY SMS Orange CI (évite le problème CORS) =====
-  if (req.method === 'POST' && parsed.pathname === '/sms-proxy') {
+  if (req.method === 'POST' && (parsed.pathname === '/sms-proxy' || parsed.pathname === '/api/sms-proxy')) {
     let body = '';
     req.on('data', chunk => body += chunk);
     req.on('end', () => {
