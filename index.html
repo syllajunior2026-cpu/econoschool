@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EconoSchool Pro</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="toast-container"></div>
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loading-text">Chargement...</div>
+</div>
+
+<!-- ==================== LOGIN ==================== -->
+<div id="login-screen" style="display:flex;">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-icon">🏫</div>
+      <h1>EconoSchool Pro</h1>
+      <p id="login-ecole-display">Gestion d'économat scolaire</p>
+    </div>
+    <div class="login-tabs">
+      <button class="login-tab active" onclick="switchLoginTab(event,'fondateur')">👑 Fondateur</button>
+      <button class="login-tab" onclick="switchLoginTab(event,'econome')">💼 Économe</button>
+    </div>
+    <div id="login-form">
+      <div class="form-group">
+        <label>Mot de passe</label>
+        <input type="password" id="login-pass" placeholder="Mot de passe"
+          onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button class="btn btn-primary" onclick="doLogin()">🚀 Se connecter</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== APP ==================== -->
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-box">🏫</div>
+        <div>
+          <h2>EconoSchool</h2>
+          <div class="school-name" id="school-name-display">—</div>
+        </div>
+      </div>
+      <div class="user-badge">
+        <div class="user-avatar" id="user-avatar-sidebar">F</div>
+        <div class="user-info">
+          <div class="user-name" id="user-name-sidebar">—</div>
+          <div class="user-role" id="user-role-sidebar">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="caisse-badge ouverte" id="caisse-badge" onclick="toggleCaisse()">
+      <span class="caisse-status-dot"></span>
+      <span id="caisse-status-text">Caisse Ouverte</span>
+    </div>
+    <div class="sync-bar synced" id="sync-bar">
+      <span class="sync-dot"></span>
+      <span id="sync-text">☁️ Connecté</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Principal</div>
+        <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
+          <span class="nav-icon">📊</span> Tableau de bord
+        </div>
+      </div>
+
+      <div class="nav-section" id="nav-section-fondateur">
+        <div class="nav-section-title">Administration</div>
+        <div class="nav-item" onclick="showPage('parametres')" id="nav-parametres"><span class="nav-icon">⚙️</span> Paramètres</div>
+        <div class="nav-item" onclick="showPage('tarifs')" id="nav-tarifs"><span class="nav-icon">💰</span> Tarifs par niveau</div>
+        <div class="nav-item" onclick="showPage('types-frais')" id="nav-types-frais"><span class="nav-icon">🏷️</span> Types de frais</div>
+        <div class="nav-item" onclick="showPage('banque')" id="nav-banque"><span class="nav-icon">🏦</span> Banque</div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Gestion</div>
+        <div class="nav-item" onclick="showPage('eleves')" id="nav-eleves"><span class="nav-icon">👨‍🎓</span> Élèves</div>
+        <div class="nav-item" onclick="showPage('paiements')" id="nav-paiements"><span class="nav-icon">💳</span> Paiements</div>
+        <div class="nav-item" onclick="showPage('caisse')" id="nav-caisse"><span class="nav-icon">🗃️</span> Caisse</div>
+        <div class="nav-item" onclick="showPage('depenses')" id="nav-depenses"><span class="nav-icon">📤</span> Dépenses</div>
+        <div class="nav-item" onclick="showPage('reductions')" id="nav-reductions"><span class="nav-icon">🎁</span> Réductions</div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Analyses</div>
+        <div class="nav-item" onclick="showPage('rapports')" id="nav-rapports"><span class="nav-icon">📈</span> Rapports</div>
+        <div class="nav-item" onclick="showPage('retards')" id="nav-retards">
+          <span class="nav-icon">⚠️</span> Retards
+          <span class="nav-badge" id="badge-retards" style="display:none;">0</span>
+        </div>
+        <div class="nav-item" onclick="showPage('bilan')" id="nav-bilan"><span class="nav-icon">📋</span> Bilan périodique</div>
+        <div class="nav-item" onclick="showPage('butoir')" id="nav-butoir"><span class="nav-icon">📅</span> Date butoir</div>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="btn-logout" onclick="doLogout()">🚪 Déconnexion</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div class="page-title">
+          <h2>📊 Tableau de bord</h2>
+          <p id="dashboard-subtitle">Vue d'ensemble</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-vert btn-sm" onclick="syncAll()">☁️ Synchroniser</button>
+        </div>
+      </div>
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card vert"><div class="stat-icon">👨‍🎓</div><div class="stat-label">Total Élèves</div><div class="stat-value" id="stat-eleves">0</div><div class="stat-sub">Inscrits cette année</div></div>
+        <div class="stat-card bleu"><div class="stat-icon">💳</div><div class="stat-label">Total Perçu</div><div class="stat-value" id="stat-paiements">0 F</div><div class="stat-sub">Tous paiements</div></div>
+        <div class="stat-card orange"><div class="stat-icon">⏳</div><div class="stat-label">Reste à Percevoir</div><div class="stat-value" id="stat-reste">0 F</div><div class="stat-sub">Toutes échéances</div></div>
+        <div class="stat-card rouge"><div class="stat-icon">⚠️</div><div class="stat-label">En Retard</div><div class="stat-value" id="stat-retard">0</div><div class="stat-sub">Élèves concernés</div></div>
+        <div class="stat-card jaune"><div class="stat-icon">🗃️</div><div class="stat-label">Solde Caisse</div><div class="stat-value" id="stat-caisse">0 F</div><div class="stat-sub">Aujourd'hui</div></div>
+        <div class="stat-card teal"><div class="stat-icon">🏦</div><div class="stat-label">Solde Banque</div><div class="stat-value" id="stat-banque">0 F</div><div class="stat-sub">Compte principal</div></div>
+        <div class="stat-card violet"><div class="stat-icon">📤</div><div class="stat-label">Total Dépenses</div><div class="stat-value" id="stat-depenses">0 F</div><div class="stat-sub">Ce mois</div></div>
+        <div class="stat-card vert"><div class="stat-icon">📊</div><div class="stat-label">Taux Recouvrement</div><div class="stat-value" id="stat-taux">0%</div><div class="stat-sub" id="stat-taux-sub">—</div></div>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-body" style="padding:14px 18px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-size:13px;font-weight:600;color:var(--gm);">📊 Taux de recouvrement global</span>
+            <span style="font-size:14px;font-weight:800;color:var(--vert);" id="dash-taux-txt">0%</span>
+          </div>
+          <div class="progress-bar-wrap" style="height:10px;">
+            <div class="progress-bar" id="dash-progress" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">💳 Derniers paiements</div><button class="btn btn-secondary btn-xs" onclick="showPage('paiements')">Voir tout</button></div>
+          <div class="card-body" id="dashboard-paiements"><div class="empty-state"><div class="empty-icon">💳</div><p>Aucun paiement</p></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">📊 Recettes par niveau</div></div>
+          <div class="card-body" id="dashboard-chart"><div class="empty-state"><div class="empty-icon">📊</div><p>Aucune donnée</p></div></div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">⚠️ Alertes retards</div><button class="btn btn-secondary btn-xs" onclick="showPage('retards')">Voir tout</button></div>
+          <div class="card-body" id="dashboard-alertes"><div class="empty-state"><div class="empty-icon">✅</div><p>Aucune alerte</p></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">📤 Dernières dépenses</div><button class="btn btn-secondary btn-xs" onclick="showPage('depenses')">Voir tout</button></div>
+          <div class="card-body" id="dashboard-depenses"><div class="empty-state"><div class="empty-icon">📤</div><p>Aucune dépense</p></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TARIFS -->
+    <div class="page" id="page-tarifs">
+      <div class="page-header">
+        <div class="page-title"><h2>💰 Tarifs par niveau</h2><p>Définir les frais par niveau</p></div>
+        <button class="btn btn-primary" onclick="sauvegarderTarifs()">💾 Sauvegarder</button>
+      </div>
+      <div id="tarifs-container"></div>
+    </div>
+
+    <!-- TYPES FRAIS -->
+    <div class="page" id="page-types-frais">
+      <div class="page-header">
+        <div class="page-title"><h2>🏷️ Types de frais</h2><p>Échéances et structures de paiement</p></div>
+        <button class="btn btn-primary" onclick="sauvegarderTypesFrais()">💾 Sauvegarder</button>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">📋 Droit d'inscription <span class="badge badge-bleu">2 échéances max</span></div></div>
+        <div class="card-body">
+          <div id="echeances-inscription-list"></div>
+          <button class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="ajouterEcheanceType('inscription')">➕ Ajouter</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">📚 Scolarité <span class="badge badge-vert">7 échéances max</span></div></div>
+        <div class="card-body">
+          <div id="echeances-scolarite-list"></div>
+          <button class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="ajouterEcheanceType('scolarite')">➕ Ajouter</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RÉDUCTIONS -->
+    <div class="page" id="page-reductions">
+      <div class="page-header">
+        <div class="page-title"><h2>🎁 Réductions scolarité</h2><p>Cas sociaux • Personnel • Organismes</p></div>
+        <div class="page-actions">
+          <button class="btn btn-primary" onclick="openModalReduction()">➕ Nouvelle demande</button>
+        </div>
+      </div>
+      <div class="alert alert-bleu">
+        <span>ℹ️</span>
+        <span>Les réductions s'appliquent uniquement sur la <strong>scolarité</strong>, en pourcentage. L'économe soumet une demande, le fondateur approuve.</span>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Élève</th><th>Niveau</th><th>Statut sco.</th><th>Réduction</th><th>Remise</th><th>Nouvelle scolarité</th><th>Motif</th><th>Statut</th><th>Actions</th></tr></thead>
+              <tbody id="tbody-reductions"><tr><td colspan="9"><div class="empty-state"><p>Aucune réduction</p></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ÉLÈVES -->
+    <div class="page" id="page-eleves">
+      <div class="page-header">
+        <div class="page-title"><h2>👨‍🎓 Élèves</h2><p id="eleves-count">0 élève(s)</p></div>
+        <div class="page-actions">
+          <button class="btn btn-secondary btn-sm" onclick="openImportPhotos()">📸 Import Photos</button>
+          <button class="btn btn-secondary btn-sm" onclick="openImportExcel()">📊 Import Excel</button>
+          <button class="btn btn-vert" onclick="openModalEleve()">➕ Nouvel élève</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+            <div class="search-bar" style="flex:1;margin:0;min-width:200px;">
+              <span>🔍</span>
+              <input type="text" placeholder="Rechercher (nom, matricule)..." id="search-eleves" oninput="filterEleves()">
+            </div>
+            <select id="filter-niveau" onchange="filterEleves()" style="padding:9px 12px;border:1.5px solid var(--gb);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;">
+              <option value="">Tous les niveaux</option>
+            </select>
+            <select id="filter-statut-eleve" onchange="filterEleves()" style="padding:9px 12px;border:1.5px solid var(--gb);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;">
+              <option value="">Tous statuts</option>
+              <option value="a_jour">À jour</option>
+              <option value="en_retard">En retard</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Photo</th><th>Matricule</th><th>Nom & Prénoms</th><th>Niveau</th><th>Statut sco.</th><th>Téléphone</th><th>Paiement</th><th>Payé</th><th>Actions</th></tr></thead>
+              <tbody id="tbody-eleves"><tr><td colspan="9"><div class="empty-state"><div class="empty-icon">👨‍🎓</div><p>Aucun élève</p></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAIEMENTS -->
+    <div class="page" id="page-paiements">
+      <div class="page-header">
+        <div class="page-title"><h2>💳 Paiements</h2><p>Enregistrement et historique</p></div>
+        <button class="btn btn-secondary btn-sm" onclick="exportPaiementsExcel()">📊 Exporter Excel</button>
+      </div>
+      <div id="caisse-fermee-alert" class="alert alert-rouge" style="display:none;">
+        <span>🔒</span><strong>Caisse fermée — Aucune opération possible.</strong>
+      </div>
+      <div id="paiement-form-zone">
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header"><div class="card-title">👤 Sélection élève</div></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label>Rechercher l'élève</label>
+                <input type="text" id="paiement-search-eleve" placeholder="Nom, prénom ou matricule..." oninput="searchElevePaiement()">
+              </div>
+              <div id="paiement-eleve-results" style="max-height:200px;overflow-y:auto;border:1px solid var(--gb);border-radius:8px;display:none;"></div>
+              <div id="paiement-eleve-selected" style="display:none;">
+                <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--vert-p);border-radius:8px;border:1px solid rgba(22,163,74,.2);">
+                  <img id="paiement-eleve-photo" src="" style="width:52px;height:52px;border-radius:8px;object-fit:cover;border:2px solid var(--vert);">
+                  <div style="flex:1;">
+                    <div style="font-weight:700;" id="paiement-eleve-nom">-</div>
+                    <div style="font-size:12px;color:var(--gc);" id="paiement-eleve-info">-</div>
+                    <div style="font-size:12px;color:var(--vert);font-weight:600;margin-top:2px;" id="paiement-eleve-solde">-</div>
+                  </div>
+                  <button class="btn btn-secondary btn-sm" onclick="clearElevePaiement()">✕</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">💰 Détails du paiement</div></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label>Type de frais</label>
+                <select id="paiement-type-frais" onchange="onTypeFraisChange()">
+                  <option value="">-- Sélectionner --</option>
+                  <option value="inscription">Droit d'inscription</option>
+                  <option value="scolarite">Scolarité</option>
+                  <option value="examen">Frais Examen</option>
+                  <option value="annexe">Frais Annexe</option>
+                </select>
+              </div>
+              <div class="form-group" id="echeance-field">
+                <label>Échéance concernée</label>
+                <select id="paiement-echeance"><option value="">-- Sélectionner --</option></select>
+              </div>
+              <div class="form-group">
+                <label>Montant (FCFA)</label>
+                <input type="number" id="paiement-montant" placeholder="0" min="0">
+              </div>
+              <div class="form-row cols-2">
+                <div class="form-group">
+                  <label>Mode de paiement</label>
+                  <select id="paiement-mode">
+                    <option value="especes">💵 Espèces</option>
+                    <option value="mobile_money">📱 Mobile Money</option>
+                    <option value="cheque">🏦 Chèque</option>
+                    <option value="virement">🔁 Virement</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Date (auto)</label>
+                  <input type="date" id="paiement-date">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Observation</label>
+                <textarea id="paiement-obs" rows="2" placeholder="Observation optionnelle..."></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:8px;">
+          <button class="btn btn-primary" style="width:320px;padding:16px;font-size:16px;" onclick="enregistrerPaiement()">✅ Valider le paiement</button>
+        </div>
+        <!-- Zone résultat après paiement -->
+        <div id="paiement-success-zone" style="display:none;margin-top:16px;">
+          <div style="background:var(--vert-p);border:1.5px solid rgba(22,163,74,.3);border-radius:var(--r);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-size:28px;">✅</span>
+              <div>
+                <div style="font-weight:700;font-size:14px;color:var(--vert);" id="success-msg">Paiement enregistré</div>
+                <div style="font-size:12px;color:var(--gc);" id="success-detail">—</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="btn btn-primary btn-sm" onclick="afficherRecuDernier()">🧾 Imprimer reçu</button>
+              <button class="btn btn-bleu btn-sm" onclick="envoyerSMSDernier()">📱 Envoyer SMS</button>
+              <button class="btn btn-secondary btn-sm" onclick="document.getElementById('paiement-success-zone').style.display='none'">✕</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:24px;">
+        <div class="card-header">
+          <div class="card-title">📜 Historique des paiements</div>
+          <div style="display:flex;gap:8px;">
+            <select id="filter-paiement-type" onchange="filterPaiements()" style="padding:6px 10px;border:1.5px solid var(--gb);border-radius:6px;font-size:12px;">
+              <option value="">Tous types</option><option value="inscription">Inscription</option><option value="scolarite">Scolarité</option><option value="examen">Examen</option><option value="annexe">Annexe</option>
+            </select>
+            <select id="filter-paiement-mode" onchange="filterPaiements()" style="padding:6px 10px;border:1.5px solid var(--gb);border-radius:6px;font-size:12px;">
+              <option value="">Tous modes</option><option value="especes">Espèces</option><option value="mobile_money">Mobile Money</option><option value="cheque">Chèque</option><option value="virement">Virement</option>
+            </select>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Élève</th><th>Niveau</th><th>Type</th><th>Échéance</th><th>Montant</th><th>Mode</th><th>Actions</th></tr></thead>
+              <tbody id="tbody-paiements"><tr><td colspan="8"><div class="empty-state"><p>Aucun paiement</p></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CAISSE -->
+    <div class="page" id="page-caisse">
+      <div class="page-header">
+        <div class="page-title"><h2>🗃️ Caisse</h2><p>Mouvements et solde</p></div>
+        <div class="page-actions">
+          <button class="btn btn-caisse-entree" id="btn-caisse-entree" onclick="openModalMouvement('entree')">➕ Entrée</button>
+          <button class="btn btn-caisse-sortie" id="btn-caisse-sortie" onclick="openModalMouvement('sortie')">➖ Sortie</button>
+          <button class="btn btn-secondary btn-sm" onclick="exportCaisseExcel()">📊 Exporter</button>
+        </div>
+      </div>
+      <div id="caisse-fermee-alert2" class="alert alert-rouge" style="display:none;"><span>🔒</span><strong>Caisse fermée.</strong></div>
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
+        <div class="stat-card vert"><div class="stat-label">Solde Actuel</div><div class="stat-value" id="caisse-solde">0 F</div></div>
+        <div class="stat-card bleu"><div class="stat-label">Total Entrées</div><div class="stat-value" id="caisse-entrees">0 F</div></div>
+        <div class="stat-card rouge"><div class="stat-label">Total Sorties</div><div class="stat-value" id="caisse-sorties">0 F</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📋 Mouvements</div>
+          <select id="filter-caisse" onchange="renderCaisse()" style="padding:6px 10px;border:1.5px solid var(--gb);border-radius:6px;font-size:12px;">
+            <option value="">Tous</option><option value="entree">Entrées</option><option value="sortie">Sorties</option>
+          </select>
+        </div>
+        <div class="card-body">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Type</th><th>Libellé</th><th>Catégorie</th><th>Montant</th><th>Solde après</th></tr></thead>
+              <tbody id="tbody-caisse"><tr><td colspan="6"><div class="empty-state"><p>Aucun mouvement</p></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DÉPENSES -->
+    <div class="page" id="page-depenses">
+      <div class="page-header">
+        <div class="page-title"><h2>📤 Dépenses</h2><p>Gestion des dépenses</p></div>
+        <div class="page-actions">
+          <button class="btn btn-primary" onclick="openModalDepense()">➕ Nouvelle dépense</button>
+          <button class="btn btn-secondary btn-sm" onclick="exportDepensesExcel()">📊 Exporter</button>
+        </div>
+      </div>
+      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);">
+        <div class="stat-card rouge"><div class="stat-label">Total Dépenses</div><div class="stat-value" id="dep-total">0 F</div></div>
+        <div class="stat-card orange"><div class="stat-label">Ce mois</div><div class="stat-value" id="dep-mois">0 F</div></div>
+        <div class="stat-card bleu"><div class="stat-label">Salaires</div><div class="stat-value" id="dep-salaires">0 F</div></div>
+        <div class="stat-card violet"><div class="stat-label">Fonctionnement</div><div class="stat-value" id="dep-fonctionnement">0 F</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📋 Liste des dépenses</div>
+          <select id="filter-depense-cat" onchange="renderDepenses()" style="padding:6px 10px;border:1.5px solid var(--gb);border-radius:6px;font-size:12px;">
+            <option value="">Toutes catégories</option>
+            <option value="salaire">Salaires</option><option value="fournitures">Fournitures</option>
+            <option value="entretien">Entretien</option><option value="energie">Énergie/Eau</option>
+            <option value="communication">Communication</option><option value="transport">Transport</option>
+            <option value="alimentation">Alimentation</option><option value="investissement">Investissement</option>
+            <option value="autre">Autre</option>
+          </select>
+        </div>
+        <div class="card-body">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Libellé</th><th>Catégorie</th><th>Bénéficiaire</th><th>Montant</th><th>Mode</th><th>Actions</th></tr></thead>
+              <tbody id="tbody-depenses"><tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📤</div><p>Aucune dépense</p></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RAPPORTS -->
+    <div class="page" id="page-rapports">
+      <div class="page-header">
+        <div class="page-title"><h2>📈 Rapports</h2><p>Analyse financière</p></div>
+        <button class="btn btn-secondary btn-sm" onclick="exportRapportExcel()">📊 Exporter Excel</button>
+      </div>
+      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);">
+        <div class="stat-card vert"><div class="stat-label">Taux recouvrement</div><div class="stat-value" id="rapport-taux">0%</div></div>
+        <div class="stat-card bleu"><div class="stat-label">Total Perçu</div><div class="stat-value" id="rapport-percu">0 F</div></div>
+        <div class="stat-card orange"><div class="stat-label">Total Attendu</div><div class="stat-value" id="rapport-attendu">0 F</div></div>
+        <div class="stat-card rouge"><div class="stat-label">Reste à percevoir</div><div class="stat-value" id="rapport-reste2">0 F</div></div>
+      </div>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchRapportTab('niveau',this)">Par niveau</button>
+        <button class="tab-btn" onclick="switchRapportTab('mois',this)">Par mois</button>
+      </div>
+      <div class="card" id="rapport-tab-niveau">
+        <div class="card-header"><div class="card-title">📊 Rapport par niveau</div></div>
+        <div class="card-body">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Niveau</th><th>Élèves</th><th>Perçu</th><th>Attendu</th><th>Reste</th><th>Taux</th><th>Progression</th></tr></thead>
+              <tbody id="tbody-rapports"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="card" id="rapport-tab-mois" style="display:none;">
+        <div class="card-header"><div class="card-title">📊 Rapport mensuel</div></div>
+        <div class="card-body" id="rapport-chart-mois"></div>
+      </div>
+    </div>
+
+    <!-- RETARDS -->
+    <div class="page" id="page-retards">
+      <div class="page-header">
+        <div class="page-title"><h2>⚠️ Suivi des retards</h2><p>Élèves avec paiements en retard</p></div>
+        <button class="btn btn-secondary btn-sm" onclick="exportRetardsExcel()">📊 Exporter</button>
+      </div>
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
+        <div class="stat-card rouge"><div class="stat-label">Élèves en retard</div><div class="stat-value" id="retard-count">0</div></div>
+        <div class="stat-card orange"><div class="stat-label">Montant total dû</div><div class="stat-value" id="retard-montant">0 F</div></div>
+        <div class="stat-card bleu"><div class="stat-label">Élèves à jour</div><div class="stat-value" id="retard-ok">0</div></div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+            <div class="search-bar" style="flex:1;margin:0;min-width:200px;"><span>🔍</span><input type="text" id="search-retards" placeholder="Rechercher un élève..." oninput="filterRetards()"></div>
+            <select id="filter-retard-niveau" onchange="filterRetards()" style="padding:9px 12px;border:1.5px solid var(--gb);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;">
+              <option value="">Tous niveaux</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Élève</th><th>Niveau</th><th>Téléphone</th><th>Payé</th><th>Attendu</th><th>Solde dû</th><th>Taux</th><th>Actions</th></tr></thead>
+              <tbody id="tbody-retards"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BANQUE -->
+    <div class="page" id="page-banque">
+      <div class="page-header">
+        <div class="page-title"><h2>🏦 Gestion Bancaire</h2><p>Versements, retraits et suivi</p></div>
+        <div class="page-actions">
+          <button class="btn btn-bleu btn-sm" onclick="openModalBanque('versement')">⬆️ Versement</button>
+          <button class="btn btn-danger btn-sm" onclick="openModalBanque('retrait')">⬇️ Retrait</button>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:20px;"><div class="card-body" style="padding:0;"><div id="banque-compte-display" style="padding:20px;"></div></div></div>
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
+        <div class="stat-card bleu"><div class="stat-label">Solde Actuel</div><div class="stat-value" id="banque-solde-actuel">0 F</div></div>
+        <div class="stat-card vert"><div class="stat-label">Total Versements</div><div class="stat-value" id="banque-total-versements">0 F</div></div>
+        <div class="stat-card rouge"><div class="stat-label">Total Retraits</div><div class="stat-value" id="banque-total-retraits">0 F</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📒 Journal bancaire</div>
+          <div style="display:flex;gap:8px;">
+            <select id="banque-filtre" onchange="renderBanque()" style="padding:6px 10px;border:1.5px solid var(--gb);border-radius:6px;font-size:12px;">
+              <option value="">Tous</option><option value="versement">Versements</option><option value="retrait">Retraits</option>
+            </select>
+            <button class="btn btn-secondary btn-sm" onclick="exportBanqueExcel()">📊 Exporter</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Type</th><th>Libellé</th><th>Référence</th><th>Montant</th><th>Solde après</th><th>Validé par</th></tr></thead>
+              <tbody id="tbody-banque"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+<!-- PAGE PARAMÈTRES -->
+<div class="page" id="page-parametres">
+  <div class="page-header">
+    <div class="page-title"><h2>⚙️ Paramètres établissement</h2><p>Configuration générale de l'application</p></div>
+    <button class="btn btn-primary" onclick="sauvegarderParametres()">💾 Sauvegarder</button>
+  </div>
+
+  <div class="grid-2">
+    <!-- Identité établissement -->
+    <div class="config-section">
+      <h3>🏫 Identité de l'établissement</h3>
+      <div class="form-group"><label>Code établissement</label>
+        <input type="text" id="param-code" placeholder="Ex: LYC001"></div>
+      <div class="form-group"><label>Nom de l'établissement *</label>
+        <input type="text" id="param-nom" placeholder="Ex: Lycée Excellence de Bouaké"></div>
+      <div class="form-row cols-2">
+        <div class="form-group"><label>Type</label>
+          <select id="param-type">
+            <option value="Lycée">Lycée</option>
+            <option value="Collège">Collège</option>
+            <option value="École primaire">École primaire</option>
+            <option value="École maternelle">École maternelle</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Statut</label>
+          <select id="param-statut">
+            <option value="Privé">Privé</option>
+            <option value="Public">Public</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>Année scolaire *</label>
+        <input type="text" id="param-annee" placeholder="Ex: 2025-2026"></div>
+      <div class="form-group"><label>Adresse</label>
+        <input type="text" id="param-adresse" placeholder="Ex: Rue des Fleurs, Cocody"></div>
+      <div class="form-row cols-2">
+        <div class="form-group"><label>Ville</label>
+          <input type="text" id="param-ville" placeholder="Ex: Abidjan"></div>
+        <div class="form-group"><label>Téléphone</label>
+          <input type="text" id="param-tel" placeholder="+225 XX XX XX XX XX"></div>
+      </div>
+      <div class="form-group"><label>Email</label>
+        <input type="email" id="param-email" placeholder="contact@ecole.ci"></div>
+    </div>
+
+    <!-- Comptes et logo -->
+    <div>
+      <div class="config-section" style="margin-bottom:16px;">
+        <h3>👑 Compte Fondateur</h3>
+        <div class="form-group"><label>Nom complet</label>
+          <input type="text" id="param-fondateur-nom" placeholder="Ex: M. KOUAME Koffi"></div>
+        <div class="form-row cols-2">
+          <div class="form-group"><label>Login</label>
+            <input type="text" id="param-fondateur-login" placeholder="fondateur"></div>
+          <div class="form-group"><label>Mot de passe</label>
+            <input type="password" id="param-fondateur-pass" placeholder="••••••••"></div>
+        </div>
+      </div>
+
+      <div class="config-section" style="margin-bottom:16px;">
+        <h3>💼 Compte Économe</h3>
+        <div class="form-group"><label>Nom complet</label>
+          <input type="text" id="param-econome-nom" placeholder="Ex: Mme BAMBA Aminata"></div>
+        <div class="form-row cols-2">
+          <div class="form-group"><label>Login</label>
+            <input type="text" id="param-econome-login" placeholder="econome"></div>
+          <div class="form-group"><label>Mot de passe</label>
+            <input type="password" id="param-econome-pass" placeholder="••••••••"></div>
+        </div>
+      </div>
+
+      <div class="config-section">
+        <h3>🖼️ Logo établissement</h3>
+        <div style="text-align:center;margin-bottom:12px;">
+          <div id="logo-preview-zone" style="width:100px;height:100px;border:2px dashed var(--gb);border-radius:12px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;background:var(--gbg);" onclick="document.getElementById('logo-input').click()">
+            <img id="logo-preview" src="" style="display:none;width:100%;height:100%;object-fit:contain;">
+            <span id="logo-placeholder" style="font-size:36px;">🏫</span>
+          </div>
+          <div style="margin-top:8px;">
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('logo-input').click()">📁 Choisir un logo</button>
+          </div>
+          <input type="file" id="logo-input" accept="image/*" style="display:none;" onchange="previewLogo(event)">
+          <div style="font-size:11px;color:var(--gc);margin-top:4px;">PNG, JPG — Affiché sur les reçus</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Niveaux scolaires -->
+  <div class="config-section">
+    <h3>📚 Niveaux scolaires</h3>
+    <div class="alert alert-bleu"><span>ℹ️</span><span>Les niveaux définissent les classes disponibles et les tarifs associés. Modifiez <code>config.js</code> pour les changer définitivement.</span></div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+      <span id="param-niveaux-display"></span>
+    </div>
+    <div style="margin-top:12px;font-size:13px;color:var(--gc);">Classes d'examen (frais examen applicables) :
+      <strong id="param-examen-display"></strong>
+    </div>
+  </div>
+
+  <!-- Info système -->
+  <div class="config-section">
+    <h3>ℹ️ Informations système</h3>
+    <div class="grid-2">
+      <div class="fiche-item"><div class="fiche-item-label">Version</div><div class="fiche-item-value">EconoSchool Pro v8.2</div></div>
+      <div class="fiche-item"><div class="fiche-item-label">Base de données</div><div class="fiche-item-value">Supabase (cloud)</div></div>
+      <div class="fiche-item"><div class="fiche-item-label">Élèves chargés</div><div class="fiche-item-value" id="param-nb-eleves">—</div></div>
+      <div class="fiche-item"><div class="fiche-item-label">Paiements enregistrés</div><div class="fiche-item-value" id="param-nb-paiements">—</div></div>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-danger btn-sm" onclick="viderDonneesLocales()">🗑️ Vider les données locales</button>
+      <button class="btn btn-secondary btn-sm" onclick="syncAll()">☁️ Resynchroniser depuis Supabase</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE BILAN PÉRIODIQUE -->
+<div class="page" id="page-bilan">
+  <div class="page-header">
+    <div class="page-title"><h2>📋 Bilan périodique</h2><p>Résumé financier sur une période</p></div>
+    <div class="page-actions">
+      <button class="btn btn-secondary btn-sm" onclick="setBilanAujourdhui()">📅 Aujourd'hui</button>
+      <button class="btn btn-secondary btn-sm" onclick="setBilanCetteSemaine()">📆 Cette semaine</button>
+      <button class="btn btn-secondary btn-sm" onclick="setBilanCeMois()">🗓️ Ce mois</button>
+      <button class="btn btn-vert btn-sm" onclick="renderBilan()">🔍 Calculer</button>
+      <button class="btn btn-secondary btn-sm" onclick="exportBilanExcel()">📊 Export</button>
+    </div>
+  </div>
+
+  <!-- Sélecteur période -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-body">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <div class="form-group" style="margin:0;flex:1;min-width:150px;">
+          <label>Date début</label>
+          <input type="date" id="bilan-date-debut" oninput="renderBilan()">
+        </div>
+        <div style="font-size:20px;color:var(--gc);padding-top:20px;">→</div>
+        <div class="form-group" style="margin:0;flex:1;min-width:150px;">
+          <label>Date fin</label>
+          <input type="date" id="bilan-date-fin" oninput="renderBilan()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats bilan -->
+  <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px;">
+    <div class="stat-card vert">
+      <div class="stat-label">Paiements reçus</div>
+      <div class="stat-value" id="bilan-total-paiements">0 F</div>
+      <div class="stat-sub"><span id="bilan-nb-paiements">0</span> transaction(s)</div>
+    </div>
+    <div class="stat-card orange">
+      <div class="stat-label">Caisse nette</div>
+      <div class="stat-value" id="bilan-caisse-net">0 F</div>
+      <div class="stat-sub">Entrées − Sorties</div>
+    </div>
+    <div class="stat-card bleu">
+      <div class="stat-label">Banque (versements)</div>
+      <div class="stat-value" id="bilan-banque-versements">0 F</div>
+      <div class="stat-sub">Retraits: <span id="bilan-banque-retraits">0 F</span></div>
+    </div>
+    <div class="stat-card rouge">
+      <div class="stat-label">Dépenses</div>
+      <div class="stat-value" id="bilan-depenses">0 F</div>
+      <div class="stat-sub">Sur la période</div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:16px;">
+    <div class="card">
+      <div class="card-header"><div class="card-title">🗃️ Détail caisse</div></div>
+      <div class="card-body">
+        <div class="recu-row"><span style="color:var(--gc);">Entrées caisse</span><strong style="color:var(--vert);" id="bilan-caisse-entrees">0 F</strong></div>
+        <div class="recu-row"><span style="color:var(--gc);">Sorties caisse</span><strong style="color:var(--rouge);" id="bilan-caisse-sorties">0 F</strong></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">🏷️ Par type de frais</div></div>
+      <div class="card-body" id="bilan-par-type"><p style="color:var(--gc);font-size:13px;">Sélectionnez une période</p></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-header"><div class="card-title">💳 Par mode de paiement</div></div>
+    <div class="card-body" id="bilan-par-mode"><p style="color:var(--gc);font-size:13px;">Sélectionnez une période</p></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-title">📜 Détail des paiements</div></div>
+    <div class="card-body">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Élève</th><th>Niveau</th><th>Type</th><th>Montant</th><th>Mode</th></tr></thead>
+          <tbody id="tbody-bilan-paiements"><tr><td colspan="6"><div class="empty-state"><p>Sélectionnez une période</p></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE DATE BUTOIR -->
+<div class="page" id="page-butoir">
+  <div class="page-header">
+    <div class="page-title"><h2>📅 Date butoir scolarité</h2><p>Situation des élèves à une date donnée</p></div>
+    <button class="btn btn-secondary btn-sm" onclick="exportButoir()">📊 Exporter Excel</button>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-body">
+      <div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;">
+        <div class="form-group" style="margin:0;flex:1;min-width:200px;">
+          <label>📅 Date butoir de paiement</label>
+          <input type="date" id="date-butoir" oninput="renderRetardsButoir()" style="font-size:15px;padding:10px;">
+        </div>
+        <div class="form-group" style="margin:0;flex:1;min-width:150px;">
+          <label>Niveau (optionnel)</label>
+          <select id="filter-retard-niveau2" onchange="renderRetardsButoir()" style="padding:10px;border:1.5px solid var(--gb);border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:13px;width:100%;">
+            <option value="">Tous les niveaux</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="renderRetardsButoir()">🔍 Analyser</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="butoir-resultat">
+    <div class="alert alert-bleu"><span>📅</span> Sélectionnez une date butoir pour voir les résultats</div>
+  </div>
+
+  <!-- Stats butoir (cachées jusqu'au calcul) -->
+  <div id="butoir-stats-zone" style="display:none;">
+    <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px;">
+      <div class="stat-card vert"><div class="stat-label">✅ Soldés</div><div class="stat-value" id="butoir-stat-solde">0</div><div class="stat-sub">Paiement complet</div></div>
+      <div class="stat-card orange"><div class="stat-label">⚡ Partiels</div><div class="stat-value" id="butoir-stat-partiel">0</div><div class="stat-sub">En cours</div></div>
+      <div class="stat-card rouge"><div class="stat-label">❌ En retard</div><div class="stat-value" id="butoir-stat-retard">0</div><div class="stat-sub">Aucun paiement</div></div>
+      <div class="stat-card bleu"><div class="stat-label">💰 Total restant dû</div><div class="stat-value" id="butoir-stat-montant">0 F</div><div class="stat-sub">À percevoir</div></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">📋 Liste des élèves</div></div>
+      <div class="card-body">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Élève</th><th>Niveau</th><th>Statut sco.</th><th>Payé</th><th>Attendu</th><th>Reste dû</th><th>Situation</th></tr></thead>
+            <tbody id="tbody-butoir"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ==================== MODALS ==================== -->
+
+<!-- Modal Élève -->
+<div class="modal-overlay" id="modal-eleve">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-eleve-title">➕ Nouvel élève</div>
+      <button class="modal-close" onclick="closeModal('modal-eleve')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="text-align:center;margin-bottom:20px;padding:16px;background:var(--bleu-p);border-radius:var(--r);border:1.5px solid rgba(37,99,235,.15);">
+        <div class="photo-upload-zone" id="photo-zone" onclick="document.getElementById('photo-input').click()">
+          <img id="photo-preview" src="" style="display:none;width:100%;height:100%;object-fit:cover;">
+          <div id="photo-placeholder"><div style="font-size:32px;">📷</div><div class="upload-hint">Photo élève<br><strong>recommandée</strong></div></div>
+        </div>
+        <button type="button" class="btn-photo-import" onclick="document.getElementById('photo-input').click()">📸 Importer une photo</button>
+        <div style="font-size:11px;color:var(--gc);margin-top:6px;">JPG, PNG — Max 5 Mo</div>
+        <input type="file" id="photo-input" accept="image/*" onchange="previewPhoto(event)" style="display:none;">
+      </div>
+      <div class="form-row cols-2">
+        <div class="form-group"><label>Matricule</label><input type="text" id="eleve-matricule" placeholder="Auto-généré si vide"></div>
+        <div class="form-group"><label>Nom & Prénoms *</label><input type="text" id="eleve-nom" placeholder="Ex: KOUAME Jean-Baptiste"></div>
+        <div class="form-group"><label>Niveau *</label><select id="eleve-niveau"><option value="">-- Sélectionner --</option></select></div><div class="form-group"><label>Classe détaillée (ex: 6eme3)</label><input type="text" id="eleve-classe-detail" placeholder="Ex: 6eme3, 5eme1..."></div>
+        <div class="form-group"><label>Sexe</label><select id="eleve-sexe"><option value="M">Masculin</option><option value="F">Féminin</option></select></div>
+        <div class="form-group"><label>Date de naissance</label><input type="date" id="eleve-naissance"></div>
+        <div class="form-group"><label>Lieu de naissance</label><input type="text" id="eleve-lieu-naissance" placeholder="Ex: Abidjan"></div>
+        <div class="form-group"><label>Statut administratif</label>
+          <select id="eleve-statut"><option value="Actif">Actif</option><option value="Inactif">Inactif</option><option value="Transféré">Transféré</option><option value="Exclu">Exclu</option></select>
+        </div>
+        <div class="form-group"><label>Statut scolarité *</label>
+          <select id="eleve-statut-sco" class="field-important">
+            <option value="Non Affecté">Non Affecté (paie scolarité)</option>
+            <option value="Affecté">Affecté État (ne paie pas scolarité)</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Qualité</label>
+          <select id="eleve-qualite"><option value="Non Redoublant">Non Redoublant</option><option value="Redoublant">Redoublant</option></select>
+        </div>
+        <div class="form-group"><label>Régime</label>
+          <select id="eleve-regime"><option value="Non Boursier">Non Boursier</option><option value="Boursier">Boursier</option></select>
+        </div>
+        <div class="form-group"><label>Téléphone élève</label><input type="text" id="eleve-tel" placeholder="+225 XX XX XX XX XX"></div>
+        <div class="form-group"><label>Nom du parent / tuteur</label><input type="text" id="eleve-parent" placeholder="Nom du parent"></div>
+        <div class="form-group"><label>Téléphone parent</label><input type="text" id="eleve-tel-parent" placeholder="+225 XX XX XX XX XX"></div>
+        <div class="form-group"><label>Adresse</label><input type="text" id="eleve-adresse" placeholder="Adresse de l'élève"></div>
+        <div class="form-group"><label>Ancienne dette (FCFA)</label><input type="number" id="eleve-ancienne-dette" placeholder="0" min="0" value="0"></div>
+        <div class="form-group"><label>Année scolaire</label><input type="text" id="eleve-annee" placeholder="Ex: 2024-2025"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-eleve')">Annuler</button>
+      <button class="btn btn-primary" onclick="sauvegarderEleve()">💾 Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Fiche Élève -->
+<div class="modal-overlay" id="modal-fiche-eleve">
+  <div class="modal modal-xl">
+    <div class="modal-header">
+      <div class="modal-title">👁️ Fiche de l'élève</div>
+      <button class="modal-close" onclick="closeModal('modal-fiche-eleve')">✕</button>
+    </div>
+    <div class="modal-body" id="fiche-eleve-content"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-fiche-eleve')">Fermer</button>
+      <button class="btn btn-bleu btn-sm" onclick="imprimerFiche()">🖨️ Imprimer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Import Excel -->
+<div class="modal-overlay" id="modal-import-excel">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📊 Import depuis Excel</div>
+      <button class="modal-close" onclick="closeModal('modal-import-excel')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-bleu"><span>ℹ️</span><div><strong>Colonnes reconnues (format standard) :</strong><br><code>Matricule | Nom | Prénoms | Date de naissance | Lieu de Naissance | Niveau | Classe | Sexe | statut | Régime | Qualite | Nom du Parent | Contact</code><br><span style="color:var(--gc);font-size:11px;">Nom + Prénoms combinés automatiquement • "Affecte"/"Non Affecte" reconnu</span></div></div>
+      <div style="border:2px dashed var(--gb);border-radius:var(--r);padding:32px;text-align:center;cursor:pointer;" onclick="document.getElementById('excel-input').click()">
+        <div style="font-size:40px;">📊</div>
+        <div style="font-weight:700;margin:8px 0;color:var(--gf);">Cliquer pour sélectionner</div>
+        <div style="font-size:13px;color:var(--gc);">.xlsx, .xls, .csv</div>
+        <input type="file" id="excel-input" accept=".xlsx,.xls,.csv" style="display:none;" onchange="previewExcel(event)">
+      </div>
+      <div id="excel-preview" style="margin-top:16px;display:none;">
+        <div id="excel-preview-info" style="font-size:13px;color:var(--gm);margin-bottom:8px;"></div>
+        <div class="table-wrap" style="max-height:250px;overflow-y:auto;border:1px solid var(--gb);border-radius:8px;">
+          <table id="excel-preview-table"><thead id="excel-preview-thead"></thead><tbody id="excel-preview-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-import-excel')">Annuler</button>
+      <button class="btn btn-primary" id="btn-importer" style="display:none;" onclick="importerDepuisExcel()">✅ Importer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Réduction -->
+<div class="modal-overlay" id="modal-reduction">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">🎁 Réduction scolarité</div><button class="modal-close" onclick="closeModal('modal-reduction')">✕</button></div>
+    <div class="modal-body">
+      <div class="alert alert-orange"><span>⚠️</span><span>La réduction s'applique uniquement sur la <strong>scolarité</strong> en pourcentage. Elle doit être approuvée par le Fondateur.</span></div>
+      <div class="form-group"><label>Élève *</label>
+        <input type="text" id="red-search-eleve" placeholder="Rechercher..." oninput="searchEleveReduction()">
+        <div id="red-eleve-results" style="border:1px solid var(--gb);border-radius:8px;max-height:150px;overflow-y:auto;display:none;"></div>
+        <div id="red-eleve-selected" style="display:none;margin-top:8px;padding:10px;background:var(--vert-p);border-radius:8px;font-weight:600;color:var(--vert);"></div>
+      </div>
+      <div class="form-row cols-2">
+        <div class="form-group"><label>Réduction (%) *</label><input type="number" id="red-pourcentage" placeholder="Ex: 20" min="1" max="100"></div>
+        <div class="form-group"><label>Organisme / Bénéficiaire</label><input type="text" id="red-organisme" placeholder="Ex: État, Mairie, Préfecture..."></div>
+      </div>
+      <div class="form-group"><label>Motif * (cas social / enfant personnel / prise en charge)</label><textarea id="red-motif" rows="2" placeholder="Précisez le motif de la réduction..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-reduction')">Annuler</button>
+      <button class="btn btn-primary" onclick="demanderReduction()">💾 Soumettre</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Mouvement Caisse -->
+<div class="modal-overlay" id="modal-mouvement">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="modal-mouvement-title">💰 Mouvement de caisse</div><button class="modal-close" onclick="closeModal('modal-mouvement')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Libellé *</label><input type="text" id="mouvement-libelle" placeholder="Description"></div>
+      <div class="form-row cols-2">
+        <div class="form-group"><label>Montant (FCFA) *</label><input type="number" id="mouvement-montant" placeholder="0" min="0"></div>
+        <div class="form-group"><label>Date</label><input type="date" id="mouvement-date"></div>
+      </div>
+      <div class="form-group"><label>Catégorie</label>
+        <select id="mouvement-categorie">
+          <option value="paiement_eleve">Paiement élève</option><option value="depense_fonctionnement">Dépense fonctionnement</option>
+          <option value="salaire">Salaire</option><option value="fournitures">Fournitures</option>
+          <option value="entretien">Entretien</option><option value="energie">Énergie/Eau</option><option value="autre">Autre</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Observation</label><textarea id="mouvement-obs" rows="2" placeholder="..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-mouvement')">Annuler</button>
+      <button class="btn btn-primary" onclick="sauvegarderMouvement()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Dépense -->
+<div class="modal-overlay" id="modal-depense">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">📤 Nouvelle dépense</div><button class="modal-close" onclick="closeModal('modal-depense')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Libellé *</label><input type="text" id="dep-libelle" placeholder="Description de la dépense"></div>
+      <div class="form-row cols-2">
+        <div class="form-group"><label>Montant (FCFA) *</label><input type="number" id="dep-montant" placeholder="0" min="0"></div>
+        <div class="form-group"><label>Date *</label><input type="date" id="dep-date"></div>
+      </div>
+      <div class="form-row cols-2">
+        <div class="form-group"><label>Catégorie</label>
+          <select id="dep-categorie">
+            <option value="salaire">Salaires / Personnel</option><option value="fournitures">Fournitures scolaires</option>
+            <option value="entretien">Entretien / Réparations</option><option value="energie">Énergie / Eau</option>
+            <option value="communication">Communication / Internet</option><option value="transport">Transport</option>
+            <option value="alimentation">Alimentation / Cantine</option><option value="investissement">Investissement / Équipement</option>
+            <option value="autre">Autre</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Mode de paiement</label>
+          <select id="dep-mode">
+            <option value="especes">💵 Espèces (caisse)</option><option value="virement">🔁 Virement bancaire</option>
+            <option value="cheque">🏦 Chèque</option><option value="mobile_money">📱 Mobile Money</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>Bénéficiaire / Fournisseur</label><input type="text" id="dep-beneficiaire" placeholder="Nom du bénéficiaire"></div>
+      <div class="form-group"><label>Référence / N° Pièce</label><input type="text" id="dep-reference" placeholder="Ex: FAC-2024-001"></div>
+      <div class="form-group"><label>Observation</label><textarea id="dep-obs" rows="2" placeholder="..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-depense')">Annuler</button>
+      <button class="btn btn-primary" onclick="sauvegarderDepense()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Reçu -->
+<div class="modal-overlay" id="modal-recu">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title">🧾 Reçu de paiement</div>
+      <button class="modal-close" onclick="closeModal('modal-recu')">✕</button>
+    </div>
+    <div class="modal-body"><div id="recu-content" class="recu-preview"></div></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-recu')">Fermer</button>
+      <button class="btn btn-bleu btn-sm" onclick="envoyerSMSDernier()">📱 SMS</button>
+      <button class="btn btn-primary" onclick="imprimerRecu()">🖨️ Imprimer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Compte Bancaire -->
+<div class="modal-overlay" id="modal-compte-bancaire">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">🏦 Compte bancaire</div><button class="modal-close" onclick="closeModal('modal-compte-bancaire')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row cols-2">
+        <div class="form-group"><label>Banque *</label><input type="text" id="banque-nom" placeholder="SGBCI, BICICI, Ecobank..."></div>
+        <div class="form-group"><label>N° Compte *</label><input type="text" id="banque-num-compte" placeholder="CI0001234567890"></div>
+        <div class="form-group"><label>Intitulé</label><input type="text" id="banque-intitule" placeholder="Compte Principal"></div>
+        <div class="form-group"><label>Agence</label><input type="text" id="banque-agence" placeholder="Agence Plateau, Abidjan"></div>
+        <div class="form-group"><label>IBAN / RIB</label><input type="text" id="banque-iban" placeholder="CI93..."></div>
+        <div class="form-group"><label>Solde d'ouverture (FCFA)</label><input type="number" id="banque-solde-init" value="0" min="0"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-compte-bancaire')">Annuler</button>
+      <button class="btn btn-primary" onclick="sauvegarderCompte()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Versement/Retrait Bancaire -->
+<div class="modal-overlay" id="modal-mouvement-banque">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="modal-banque-title">⬆️ Versement</div><button class="modal-close" onclick="closeModal('modal-mouvement-banque')">✕</button></div>
+    <div class="modal-body">
+      <div id="banque-solde-info" style="background:var(--gbg);border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:13px;color:var(--gc);">Solde actuel</span>
+        <span style="font-weight:800;font-size:16px;color:var(--bleu);" id="banque-solde-modal">0 F</span>
+      </div>
+      <div class="form-group"><label>Libellé *</label><input type="text" id="banque-libelle" placeholder="Description"></div>
+      <div class="form-row cols-2">
+        <div class="form-group"><label>Montant *</label><input type="number" id="banque-montant" placeholder="0" min="1"></div>
+        <div class="form-group"><label>Date</label><input type="date" id="banque-date-op"></div>
+      </div>
+      <div class="form-group"><label>Référence</label><input type="text" id="banque-reference" placeholder="N° bordereau..."></div>
+      <div class="form-group"><label>Observation</label><textarea id="banque-obs" rows="2"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-mouvement-banque')">Annuler</button>
+      <button class="btn btn-primary" id="btn-banque-save" onclick="sauvegarderMouvementBanque()">💾 Valider</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL IMPORT PHOTOS -->
+<div class="modal-overlay" id="modal-import-photos">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📸 Import photos par matricule</div>
+      <button class="modal-close" onclick="closeModal('modal-import-photos')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-bleu">
+        <span>ℹ️</span>
+        <div><strong>Règle de nommage :</strong> le nom du fichier photo doit correspondre exactement au matricule de l'élève.<br>
+        <span style="color:var(--gc);">Exemple : <code>18034434Q.JPG</code> → élève matricule <code>18034434Q</code></span></div>
+      </div>
+      <div style="border:2px dashed var(--gb);border-radius:var(--r);padding:32px;text-align:center;cursor:pointer;transition:all .2s;"
+           onclick="document.getElementById('import-photos-input').click()"
+           onmouseover="this.style.borderColor='var(--vert)'" onmouseout="this.style.borderColor='var(--gb)'">
+        <div style="font-size:48px;">📁</div>
+        <div style="font-weight:700;font-size:15px;margin:10px 0;color:var(--gf);">Cliquer pour sélectionner les photos</div>
+        <div style="font-size:13px;color:var(--gc);">Sélectionnez plusieurs fichiers à la fois (JPG, PNG, JPEG)</div>
+        <div style="font-size:12px;color:var(--vert);margin-top:6px;font-weight:600;">Tip : Ctrl+A pour tout sélectionner dans le dossier</div>
+        <input type="file" id="import-photos-input" accept="image/*" multiple style="display:none;"
+               onchange="importerPhotosParMatricule(event)">
+      </div>
+      <div id="import-photos-stats" style="margin-top:16px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-import-photos')">Fermer</button>
+    </div>
+  </div>
+</div>
+<div id="print-zone" style="display:none;"></div>
+
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
