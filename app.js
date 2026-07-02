@@ -1288,8 +1288,14 @@ function afficherRecu(paiement, eleve) {
     ? '<img src="' + logoData + '" style="width:70px;height:70px;object-fit:contain;margin:0 auto 8px;display:block;">'
     : '<div style="font-size:40px;margin-bottom:8px;">🏫</div>';
 
+  // Photo élève — affichée en haut à droite du reçu
+  const photoHtml = (eleve && eleve.photo)
+    ? '<img src="' + eleve.photo + '" style="position:absolute;top:0;right:0;width:64px;height:64px;object-fit:cover;border-radius:8px;border:2px solid var(--gb, #e2e8f0);">'
+    : '<div style="position:absolute;top:0;right:0;width:64px;height:64px;border-radius:8px;background:var(--vert-p, #f1f5f9);display:flex;align-items:center;justify-content:center;font-size:26px;border:2px solid var(--gb, #e2e8f0);">👤</div>';
+
   document.getElementById('recu-content').innerHTML =
-    '<div class="recu-header">' +
+    '<div class="recu-header" style="position:relative;">' +
+    photoHtml +
     logoHtml +
     '<div style="font-size:20px;font-weight:800;color:var(--gf);margin-bottom:4px;">' + CONFIG.nom_ecole + '</div>' +
     '<div style="font-size:12px;color:var(--gc);">' + (CONFIG.adresse || '') + (CONFIG.ville ? ' — ' + CONFIG.ville : '') + '</div>' +
